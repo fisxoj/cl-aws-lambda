@@ -17,9 +17,6 @@
   "The function that contains the function code.")
 
 
-(defvar *aws-lambda-runtime-api*)
-
-
 (defun check-environment ()
   "Checks to see that everything outside the lisp runtime is set up as we expect."
 
@@ -28,14 +25,15 @@
 	     (error 'environment-error
 		    :message (format nil "Environment variable ~S was not set during initialization." name)))))
     (check-env "_HANDLER")
-    (check-env "LAMBDA_TASK_ROOT")
-    (check-env "AWS_LAMBDA_RUNTIME_API")))
+    (check-env "LAMBDA_TASK_ROOT")))
 
 
 (defmacro with-environment (() &body body)
   `(let ((*handler* (uiop:getenv "_HANDLER"))
-	 (*lambda-task-root* (uiop:getenv "LAMBDA_TASK_ROOT"))
-	 (*aws-lambda-runtime-api* (uiop:getenv "AWS_LAMBDA_RUNTIME_API")))
+	 (*lambda-task-root* (uiop:getenv "LAMBDA_TASK_ROOT")))
      ;; (declare (dynamic-extent *handler* *lambda-task-root* *aws-lambda-runtime-api*))
+     (log:info "Environment:
+  _HANDLER: ~a
+  LAMBDA_TASK_ROOT: ~a" *handler* *lambda-task-root*)
      (check-environment)
      ,@body))

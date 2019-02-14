@@ -9,4 +9,8 @@
 
 (ql:quickload :example-lambda)
 
+#+sbcl
 (asdf:make :example-lambda)
+
+#+ccl
+(ccl:save-application "bootstrap" :toplevel-function #'cl-aws-lambda/runtime:main :prepend-kernel t)

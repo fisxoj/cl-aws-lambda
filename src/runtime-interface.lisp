@@ -1,7 +1,5 @@
 (defpackage cl-aws-lambda/runtime-interface
   (:use :cl :alexandria)
-  (:import-from :cl-aws-lambda/environment
-		#:*aws-lambda-runtime-api*)
   (:import-from :cl-aws-lambda/conditions
 		#:runtime-error
 		#:message-of)
@@ -21,32 +19,26 @@
 (defvar *request-id* nil)
 
 
-;; (defvar *next-invocation*
-;;   '())
-
-
-;; (defvar *error-schema*
-;;   (sanity-clause.schema:load
-;;    '(:error-message (:string :validator (:not-empty) :data-key "errorMessage" :required t)
-;;      :error-type    (:string :validator (:not-empty) :data-key "errorType"    :required t)))
-;;   "Schema for the JSON payload for an `Invocation Error <https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html#runtimes-api-invokeerror>`_.")
+(defvar *aws-lambda-runtime-api* nil
+  "The hostname/port of the lambda runtime.")
 
 
 (defun make-runtime-url (&rest path-components)
-  (declare (type (trivial-types:proper-list string)))
+  (declare (type (trivial-types:proper-list string) path-components))
+  (let ((*aws-lambda-runtime-api* (uiop:getenv "AWS_LAMBDA_RUNTIME_API")))
 
-  (assert *aws-lambda-runtime-api* nil "Tried to assemble a runtime url, but *aws-lambda-runtime-api* was nil.")
+    (assert *aws-lambda-runtime-api* nil "Tried to assemble a runtime url, but *aws-lambda-runtime-api* was nil.")
 
-  (format nil "http://~a/~a/~a"
-	  *aws-lambda-runtime-api*
-          *api-version*
-          (str:concat path-components)))
+    (format nil "http://~a/~a/~a"
+	    *aws-lambda-runtime-api*
+	    *api-version*
+	    (apply #'str:concat path-components))))
 
 
 (defun next-invocation ()
   "`Next Invocation <https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html#runtimes-api-next>`_."
 
-  (multiple-value-bind (body status headers) (dex:get (make-runtime-url "runtime/invocation/next"))
+  (multiple-value-bind (body status headers) (dex:get (make-runtime-url "runtime/invocation/next") :want-stream nil)
     (assert (= status 200) nil "The runtime interface returned a value of ~d, the body of the response was: ~S" status body)
 
     (values (jojo:parse body :as :alist) (gethash "Lambda-Runtime-Aws-Request-Id" headers))))
@@ -74,17 +66,17 @@
 
   (assert *request-id* nil "Tried to report an invocation error but *request-id* was unbound.")
 
-  (dex:post (make-runtime-url "runtime/invocation/" *request-id* "error"
-			      :content (jojo:with-output-to-string*
-					 (jojo:with-object
-					   (jojo:write-key-value "errorMessage" (or (message-of error) ""))
-					   (jojo:write-key-value "errorType" (class-name (class-of error))))))))
+  (dex:post (make-runtime-url "runtime/invocation/" *request-id* "error")
+	    :content (jojo:with-output-to-string*
+		       (jojo:with-object
+			   (jojo:write-key-value "errorMessage" (or (message-of error) ""))
+			 (jojo:write-key-value "errorType" (class-name (class-of error)))))))
 
 (defun initialization-error (error)
   (declare (type runtime-error error))
 
-  (dex:post (make-runtime-url "runtime/init/error"
-			      :content (jojo:with-output-to-string*
-					 (jojo:with-object
-					   (jojo:write-key-value "errorMessage" (or (message-of error) ""))
-					   (jojo:write-key-value "errorType" (class-name (class-of error))))))))
+  (dex:post (make-runtime-url "runtime/init/error")
+	    :content (jojo:with-output-to-string*
+		       (jojo:with-object
+			   (jojo:write-key-value "errorMessage" (or (message-of error) ""))
+			 (jojo:write-key-value "errorType" (class-name (class-of error)))))))

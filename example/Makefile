@@ -15,7 +15,7 @@ bootstrap: example-lambda.asd $(wildcard %.lisp)
 	./build.lisp
 
 function.zip: bootstrap
-	rm function.zip
+	rm function.zip || exit 0
 	zip function.zip bootstrap
 
 build: bootstrap
@@ -27,6 +27,8 @@ deploy: bootstrap function.zip
 
 update: bootstrap function.zip
 	aws lambda update-function-code --function-name ${FUNCTION_NAME} --zip-file fileb://function.zip
+invoke:
+	aws lambda invoke --function-name ${FUNCTION_NAME} --payload '{"name": "Matt"}' response.txt
 
 clean:
 	rm function.zip bootstrap
