@@ -12,7 +12,8 @@ all: default
 default: bootstrap
 
 bootstrap: example-lambda.asd $(wildcard %.lisp)
-	./build.lisp
+	docker build . -t cl-aws-builder
+	docker run --rm -it -v ${PWD}:/work/ -v ${HOME}/quicklisp/local-projects:/root/quicklisp/local-projects cl-aws-builder
 
 function.zip: bootstrap
 	rm function.zip || exit 0

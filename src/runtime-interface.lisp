@@ -16,7 +16,8 @@
 (defvar *api-version* "2018-06-01")
 
 
-(defvar *request-id* nil)
+(defvar *request-id* nil
+  "The value of the ``lambda-runtime-aws-request-id`` header for a given request.  Only bound inside :macro:`do-events`.")
 
 
 (defvar *aws-lambda-runtime-api* nil
@@ -38,10 +39,10 @@
 (defun next-invocation ()
   "`Next Invocation <https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html#runtimes-api-next>`_."
 
-  (multiple-value-bind (body status headers) (dex:get (make-runtime-url "runtime/invocation/next") :want-stream nil)
+  (multiple-value-bind (body status headers) (dex:get (make-runtime-url "runtime/invocation/next"))
     (assert (= status 200) nil "The runtime interface returned a value of ~d, the body of the response was: ~S" status body)
 
-    (values (jojo:parse body :as :alist) (gethash "Lambda-Runtime-Aws-Request-Id" headers))))
+    (values (jojo:parse body :as :alist) (gethash "lambda-runtime-aws-request-id" headers))))
 
 
 (defmacro do-events ((event) &body body)
@@ -57,7 +58,7 @@
 
   (assert *request-id* nil "Tried to report an invocation error but *request-id* was unbound.")
 
-  (dex:post (make-runtime-url "runtime/invocation/")
+  (dex:post (make-runtime-url "runtime/invocation/" *request-id* "/response")
             :content content))
 
 
@@ -66,7 +67,7 @@
 
   (assert *request-id* nil "Tried to report an invocation error but *request-id* was unbound.")
 
-  (dex:post (make-runtime-url "runtime/invocation/" *request-id* "error")
+  (dex:post (make-runtime-url "runtime/invocation/" *request-id* "/error")
 	    :content (jojo:with-output-to-string*
 		       (jojo:with-object
 			   (jojo:write-key-value "errorMessage" (or (message-of error) ""))

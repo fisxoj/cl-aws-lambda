@@ -6,7 +6,6 @@
                "jonathan"
 	       "log4cl"
 	       "str"
-	       "trivial-backtrace"
 	       "trivial-types")
   :components ((:file "conditions")
 	       (:file "environment")

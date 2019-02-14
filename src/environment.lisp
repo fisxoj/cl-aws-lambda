@@ -17,6 +17,9 @@
   "The function that contains the function code.")
 
 
+(defvar *lambda-runtme-dir* nil)
+
+
 (defun check-environment ()
   "Checks to see that everything outside the lisp runtime is set up as we expect."
 
@@ -30,10 +33,15 @@
 
 (defmacro with-environment (() &body body)
   `(let ((*handler* (uiop:getenv "_HANDLER"))
-	 (*lambda-task-root* (uiop:getenv "LAMBDA_TASK_ROOT")))
+	 (*lambda-task-root* (uiop:getenv "LAMBDA_TASK_ROOT"))
+         (*lambda-runtime-dir* (uiop:getenv "LAMBDA_RUNTIME_DIR")))
      ;; (declare (dynamic-extent *handler* *lambda-task-root* *aws-lambda-runtime-api*))
-     (log:info "Environment:
+     (log:debug "Environment:
   _HANDLER: ~a
   LAMBDA_TASK_ROOT: ~a" *handler* *lambda-task-root*)
      (check-environment)
+
+     ;; This prevents errors about Syscall poll(2)
+     (uiop:chdir *lambda-runtime-dir*)
+
      ,@body))
