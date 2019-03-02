@@ -1,13 +1,9 @@
 (defpackage cl-aws-lambda/runtime
-  (:use :cl :alexandria :cl-aws-lambda/runtime-interface)
-  (:import-from :cl-aws-lambda/environment
-		#:with-environment
-		#:*handler*
-		#:*lambda-task-root*)
-  (:import-from :cl-aws-lambda/conditions
-		#:runtime-error
-		#:uncaught-error
-		#:environment-error)
+  (:use :cl
+        :alexandria
+        :cl-aws-lambda/runtime-interface
+        :cl-aws-lambda/conditions
+        :cl-aws-lambda/environment)
   (:export #:main))
 
 (in-package :cl-aws-lambda/runtime)
@@ -17,18 +13,29 @@
   "Main entry point that bootstraps the runtime and then invokes the handler function."
 
   (handler-bind ((environment-error (lambda (e)
-				      (initialization-error e)))
+                                      (initialization-error e)
+                                      (uiop:quit 1)))
 		 (error (lambda (e)
-			  (initialization-error (make-instance 'uncaught-error
-							       :message (format nil "Uncaught error signaled during initialization:~%  ~a~%~%" e))))))
+                          (handle-uncaught-initialization-error e)
+                          (uiop:quit 1))))
+
     (with-environment ()
       (let ((handler-function (symbol-function (read-from-string *handler*))))
-        (format nil "~&Using handler function ~a." *handler*)
+
+        (log:info "Using handler function ~a." *handler*)
+
         (do-events (event)
-          (format nil "~&Handling event:~% ~a" event)
-          (handler-bind ((runtime-error (lambda (e)
-                                          (invocation-error e)))
-                         (error (lambda (e)
-                                  (invocation-error (make-instance 'uncaught-error
-                                                                   :message (format nil "Uncaught error signaled during invocation:~%---~%  ~a~%---~%" e))))))
-            (invocation-response (funcall handler-function event))))))))
+          (log:debug "~&Handling event:~% ~a" event)
+
+          (restart-case
+              (handler-bind ((runtime-error (lambda (e)
+                                              (invocation-error e)
+                                              (invoke-restart 'continue)))
+                             (error (lambda (e)
+                                      (invocation-error (handle-uncaught-invocation-error e))
+                                      (invoke-restart 'continue))))
+
+                (invocation-response (funcall handler-function event)))
+            (continue ()
+              ;; Let the iteration continue, the error will be handled in the handler-bind form
+              nil)))))))

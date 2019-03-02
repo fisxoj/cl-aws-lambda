@@ -21,3 +21,9 @@
   :components ((:file "runtime-interface"))
   :perform (test-op (o c)
                     (funcall (read-from-string "ROVE:RUN") c :env '(("AWS_LAMBDA_RUNTIME_API" . "test-aws-runtime:8000")))))
+
+
+(defsystem cl-aws-lambda/asdf
+  :depends-on ("asdf")
+  :pathname "src/"
+  :components ((:file "asdf")))

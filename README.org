@@ -1,3 +1,68 @@
 #+TITLE: A CL Runtime for AWS Lambda
 
-Don't use this!  Actually, if you can make it work, please let me know!
+Don't use this!  It's still very unstable and APIs are likely to change as the chaos of creation subsides.  I'd welcome collaborators, though.
+
+* How to use this
+
+  If that didn't deter you, read on!
+
+** With the ASDF helper
+
+   Hopefully the easy route, by defining your system, you can just define the code that needs to be run without caring much about the runtime implementation.
+
+   Define an asd file like this one, which marks your system as defining lambda functions.  It will automatically cause your system to generate a binary named ~bootstrap~, which is what the aws runtime expects.  It will also automatically depend on the ~cl-aws-lambda~ system.
+
+   #+BEGIN_SRC lisp
+     (defsystem example-lambda
+       :defsystem-depends-on ("cl-aws-lambda/asdf")
+       :class :lambda-system
+       :components ((:file "hello")))
+   #+END_SRC
+
+   Now, you can write regular common lisp however you'd like to, for example, this function that says hello when given a name:
+
+   #+BEGIN_SRC lisp
+     (defpackage example-lambda
+       (:use :cl)
+       (:export #:hello))
+
+     (in-package :example-lambda)
+
+     (defun hello (event)
+       (let ((name (cdr (assoc "name" event :test #'string=))))
+         (if name
+             (format nil "Hello, ~a!" name)
+             (error "No name supplied!"))))
+   #+END_SRC
+
+   You should now be able to compile your binary by calling ~(asdf:make :example-lambda)~.  The bootstrap binary produced is suitable for uploading to a lambda as a 'runtime provided' zip file.  You can see an example of this in the ~example/~ directory.
+
+** Without the ASDF helper
+   You can achieve the equivalent of the asdf helper class by providing these values to your system definition:
+
+   #+BEGIN_SRC lisp
+        :build-operation "program-op"
+        :build-pathname "bootstrap"
+        :entry-point "cl-aws-lambda/runtime:main"
+   #+END_SRC
+
+** Writing handler functions
+   Any function can handle lambda requests!  Just define the handler as the lowercase name of the function so the runtime can find it (eg. ~example-lambda:hello~ in the example above).
+
+   Handler functions are currently functions of one argument that receive the json passed to the lambda decoded as an alist (to avoid keyword explosion of parsing it as a plist).
+
+* Common Errors
+
+** ~/lib64/libc.so.6: version `GLIBC_2.28' not found~
+   A helpful hint from stassats on reddit sorted this one out:
+
+   #+BEGIN_QUOTE
+   Can you try SBCL built after https://github.com/sbcl/sbcl/commit/6a78c5d72f14e65e0dd5be48efc00375e1df966e ?
+   #+END_QUOTE
+
+   It seems like the minimum version of sbcl required is 1.4.14.  Prior to that, it couldn't handle older versions of libc, like the one in the aws lambda runtime.
+
+   The ~example/~ directory provides a dockerfile that downloads a sufficiently recent sbcl to build its lambda that you can use as an example, though take care, it is only a proof of concept level of quality at this point.
+
+** ~Syscall poll(2) failed~
+   Networking libraries seem to choke sometimes (dexador, drakma) while trying to read from a unix socket.  It seems to only happen intermittently, and the cause isn't entirely clear, yet. See [[https://github.com/fisxoj/cl-aws-lambda/issues/1][issue #1]].

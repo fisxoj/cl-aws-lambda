@@ -4,6 +4,7 @@
 		#:environment-error)
   (:export #:with-environment
 	   #:*handler*
+           #:*lambda-runtme-dir*
 	   #:*lambda-task-root*
 	   #:*aws-lambda-runtime-api*))
 
@@ -35,7 +36,7 @@
   `(let ((*handler* (uiop:getenv "_HANDLER"))
 	 (*lambda-task-root* (uiop:getenv "LAMBDA_TASK_ROOT"))
          (*lambda-runtime-dir* (uiop:getenv "LAMBDA_RUNTIME_DIR")))
-     ;; (declare (dynamic-extent *handler* *lambda-task-root* *aws-lambda-runtime-api*))
+
      (log:debug "Environment:
   _HANDLER: ~a
   LAMBDA_TASK_ROOT: ~a" *handler* *lambda-task-root*)
