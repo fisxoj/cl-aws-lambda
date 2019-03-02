@@ -1,10 +1,10 @@
 
 include .env
 
-FUNCTION_NAME=hello-cl
+FUNCTION_NAME ?= hello-cl
 ROLE_ARN ?= "set-your-arn-here"
-HANDLER="example-lambda:hello"
-REGION="us-east-1"
+HANDLER ?= "example-lambda:hello"
+REGION ?= "us-east-1"
 
 .PHONY: default all clean
 all: default
