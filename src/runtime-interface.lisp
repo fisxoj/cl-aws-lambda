@@ -108,10 +108,23 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 (defun next-invocation ()
   "`Next Invocation <https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html#runtimes-api-next>`_."
 
-  (multiple-value-bind (body status headers) (dex:get (make-runtime-url "runtime/invocation/next"))
-    (assert (= status 200) nil "The runtime interface returned a value of ~d, the body of the response was: ~S" status body)
+  (flet ((logged-retry ()
+           (let ((retries 0))
+             (lambda (e)
+               (declare (type condition e))
+               (when-let ((restart (find-restart 'dex:retry-request e)))
+                 (when (< retries 5)
+                   (incf retries)
+                   (log:error "Retrying request for the ~:r time because of error ~a" retries e)
+                   (invoke-restart restart)))))))
 
-    (values (jojo:parse body :as :alist) (make-context headers))))
+    ;; This retry is an attempt to handle the errors making syscall poll(2) that
+    ;; seem to happen when the process is unfrozen by the lambda runtime.
+    (handler-bind ((simple-error (logged-retry)))
+      (multiple-value-bind (body status headers) (dex:get (make-runtime-url "runtime/invocation/next"))
+        (assert (= status 200) nil "The runtime interface returned a value of ~d, the body of the response was: ~S" status body)
+
+        (values (jojo:parse body :as :alist) (make-context headers))))))
 
 
 (defmacro do-events ((event) &body body)

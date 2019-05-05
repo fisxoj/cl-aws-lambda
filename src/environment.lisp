@@ -4,7 +4,7 @@
 		#:environment-error)
   (:export #:with-environment
 	   #:*handler*
-           #:*lambda-runtme-dir*
+           #:*lambda-runtime-dir*
 	   #:*lambda-task-root*
 	   #:*aws-lambda-runtime-api*))
 
