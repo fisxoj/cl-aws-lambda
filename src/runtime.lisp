@@ -45,7 +45,7 @@
     (with-environment ()
       (let ((handler-function (symbol-function (read-from-string *handler*))))
 
-        (log:info "Using handler function ~a." *handler*)
+        (log:debug "Using handler function ~a." *handler*)
 
         (do-events (event)
           (log:debug "~&Handling event:~% ~a" event)
