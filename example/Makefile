@@ -6,14 +6,22 @@ ROLE_ARN ?= "set-your-arn-here"
 HANDLER ?= "example-lambda:hello"
 REGION ?= "us-east-1"
 
-.PHONY: default all clean
+.PHONY: default all clean clean-artifacts clean-docker build update deploy invoke
 all: default
 
 default: bootstrap
 
-bootstrap: example-lambda.asd $(wildcard %.lisp)
+bootstrap: $(wildcard *.asd) $(wildcard *.lisp)
 	docker build . -t cl-aws-builder
-	docker run --rm -it -v ${PWD}:/work/ -v ${HOME}/quicklisp/local-projects:/root/quicklisp/local-projects cl-aws-builder
+	docker volume create cl-aws-asdf-cache
+	docker volume create cl-aws-quicklisp
+	docker run --rm -it \
+		-e ASDF_OUTPUT_TRANSLATIONS="/:/asdf-cache/" \
+		-v ${PWD}:/work/ \
+		-v cl-aws-quicklisp:/root/quicklisp \
+		-v ${HOME}/quicklisp/local-projects:/root/quicklisp/local-projects \
+		-v cl-aws-asdf-cache:/asdf-cache/ \
+		cl-aws-builder
 
 function.zip: bootstrap
 	rm function.zip || exit 0
@@ -31,5 +39,11 @@ update: bootstrap function.zip
 invoke:
 	aws lambda invoke --function-name ${FUNCTION_NAME} --payload '{"name": "Matt"}' response.txt
 
-clean:
-	rm function.zip bootstrap
+clean-artifacts:
+	rm -f function.zip bootstrap
+
+clean-docker:
+	docker volume rm cl-aws-asdf-cache
+	docker volume rm cl-aws-quicklisp
+
+clean: clean-artifacts clean-docker
