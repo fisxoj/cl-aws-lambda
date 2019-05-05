@@ -24,7 +24,7 @@ bootstrap: $(wildcard *.asd) $(wildcard *.lisp)
 		cl-aws-builder
 
 function.zip: bootstrap
-	rm function.zip || exit 0
+	2>/dev/null rm function.zip
 	zip function.zip bootstrap
 
 build: bootstrap
