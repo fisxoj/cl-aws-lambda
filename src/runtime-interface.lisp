@@ -157,7 +157,9 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
   (dex:post (make-runtime-url "runtime/invocation/" (request-id-of *context*) "/response")
             :content content
             ;; saves 20+ms
-            :keep-alive nil))
+            :keep-alive nil
+            ;; Seems to save around 10ms
+            :force-binary t))
 
 
 (defun invocation-error (error)
