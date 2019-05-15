@@ -126,7 +126,10 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
     ;; This retry is an attempt to handle the errors making syscall poll(2) that
     ;; seem to happen when the process is unfrozen by the lambda runtime.
     (handler-bind ((simple-error (logged-retry)))
-      (multiple-value-bind (body status headers) (dex:get (make-runtime-url "runtime/invocation/next"))
+      (multiple-value-bind (body status headers) (dex:get (make-runtime-url "runtime/invocation/next")
+                                                          ;; saves 20+ms
+                                                          :keep-alive nil)
+        (declare (type fixnum status))
         (assert (= status 200) nil "The runtime interface returned a value of ~d, the body of the response was: ~S" status body)
 
         (values (jojo:parse body :as :alist) (make-context headers))))))
@@ -152,7 +155,9 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
   (assert *context* nil "Tried to report an invocation error but *context* was unbound.")
 
   (dex:post (make-runtime-url "runtime/invocation/" (request-id-of *context*) "/response")
-            :content content))
+            :content content
+            ;; saves 20+ms
+            :keep-alive nil))
 
 
 (defun invocation-error (error)
