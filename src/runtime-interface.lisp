@@ -142,7 +142,8 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
        do (let ((*context* ,context))
 
             ;; When the request is traced, we should set _X_AMZN_TRACE_ID so that xray libraries know the tracing info.
-            (setf (uiop:getenv "_X_AMZN_TRACE_ID") (if (sampled-p *context*) (trace-id-of *context*) ""))
+            (when (sampled-p *context*)
+              (setf (uiop:getenv "_X_AMZN_TRACE_ID") (trace-id-of *context*)))
 
 	    ,@body))))
 
