@@ -22,6 +22,7 @@
 
 (in-package :cl-aws-lambda/runtime-interface)
 
+
 (defvar *api-version* "2018-06-01")
 
 
@@ -73,6 +74,7 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
                      :documentation "Lambda-Runtime-Cognito-Identity – For invocations from the AWS Mobile SDK, data about the Amazon Cognito identity provider.")))
 
 
+(declaim (inline make-context))
 (defun make-context (headers)
   "Makes a context instance out of a hash table of headers."
 
@@ -89,12 +91,14 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
                    :cognito-identity (header "Lambda-Runtime-Cognito-Identity"))))
 
 
+(declaim (inline sampled-p))
 (defun sampled-p (context)
   (declare (type request-context context))
 
   (str:containsp "Sampled=1" (trace-id-of context)))
 
 
+(declaim (inline make-runtime-url))
 (defun make-runtime-url (&rest path-components)
   (declare (type (trivial-types:proper-list string) path-components))
   (let ((*aws-lambda-runtime-api* (uiop:getenv "AWS_LAMBDA_RUNTIME_API")))
@@ -107,10 +111,11 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 	    (apply #'str:concat path-components))))
 
 
+(declaim (inline next-invocation))
 (defun next-invocation ()
   "`Next Invocation <https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html#runtimes-api-next>`_."
 
-  (declare (optimize (space 3) (speed 3) (safety 1)))
+  (declare (optimize (speed 3) (space 3) (safety 0) (compilation-speed 0)))
 
   (flet ((logged-retry ()
            (let ((retries 0))
@@ -148,10 +153,11 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 	    ,@body))))
 
 
+(declaim (inline invocation-response))
 (defun invocation-response (content)
   "`Invocation Response <https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html#runtimes-api-response>`_."
 
-  (declare (optimize space (speed 3) (safety 1)))
+  (declare (optimize (speed 3) (space 3) (safety 0) (compilation-speed 0)))
 
   (assert *context* nil "Tried to report an invocation error but *context* was unbound.")
 
