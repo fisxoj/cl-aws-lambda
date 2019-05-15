@@ -24,7 +24,7 @@ bootstrap: $(wildcard *.asd) $(wildcard *.lisp)
 		cl-aws-builder
 
 function.zip: bootstrap
-	2>/dev/null rm function.zip
+	rm function.zip || exit 0
 	zip function.zip bootstrap
 
 build: bootstrap
@@ -38,6 +38,9 @@ update: bootstrap function.zip
 	aws lambda update-function-code --function-name ${FUNCTION_NAME} --zip-file fileb://function.zip
 invoke:
 	aws lambda invoke --function-name ${FUNCTION_NAME} --payload '{"name": "Matt"}' response.txt
+
+invoke-local:
+	docker run --rm -v "${PWD}":/var/task lambci/lambda:provided ${HANDLER} '{"name": "Wedge"}'
 
 clean-artifacts:
 	rm -f function.zip bootstrap

@@ -41,14 +41,14 @@
 (defun main ()
   "Main entry point that bootstraps the runtime and then invokes the handler function."
 
+  (declare (optimize space (speed 3)))
+
   (handling-intialization-errors ()
     (with-environment ()
       (let ((handler-function (symbol-function (read-from-string *handler*))))
 
-        (log:debug "Using handler function ~a." *handler*)
+        (log:info "Using handler function ~a." *handler*)
 
         (do-events (event)
-          (log:debug "~&Handling event:~% ~a" event)
-
           (handling-invocation-errors ()
             (invocation-response (funcall handler-function event))))))))
