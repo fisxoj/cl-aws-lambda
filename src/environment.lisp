@@ -37,12 +37,5 @@
 	 (*lambda-task-root* (uiop:getenv "LAMBDA_TASK_ROOT"))
          (*lambda-runtime-dir* (uiop:getenv "LAMBDA_RUNTIME_DIR")))
 
-     (log:debug "Environment:
-  _HANDLER: ~a
-  LAMBDA_TASK_ROOT: ~a" *handler* *lambda-task-root*)
      (check-environment)
-
-     ;; This prevents errors about Syscall poll(2)
-     (uiop:chdir *lambda-runtime-dir*)
-
      ,@body))
