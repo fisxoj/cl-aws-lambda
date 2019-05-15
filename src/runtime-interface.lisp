@@ -76,6 +76,8 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 (defun make-context (headers)
   "Makes a context instance out of a hash table of headers."
 
+  (declare (optimize (speed 3) (space 3) (safety 0) (compilation-speed 0)))
+
   (macrolet ((header (name) `(gethash ,(string-downcase name) headers)))
 
     (make-instance 'request-context
@@ -108,8 +110,11 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 (defun next-invocation ()
   "`Next Invocation <https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html#runtimes-api-next>`_."
 
+  (declare (optimize (space 3) (speed 3) (safety 1)))
+
   (flet ((logged-retry ()
            (let ((retries 0))
+             (declare (type (integer 0 5) retries))
              (lambda (e)
                (declare (type condition e))
                (when-let ((restart (find-restart 'dex:retry-request e)))
@@ -141,6 +146,8 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 
 (defun invocation-response (content)
   "`Invocation Response <https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html#runtimes-api-response>`_."
+
+  (declare (optimize space (speed 3) (safety 1)))
 
   (assert *context* nil "Tried to report an invocation error but *context* was unbound.")
 
