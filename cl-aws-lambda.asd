@@ -4,9 +4,10 @@
   :depends-on ("alexandria"
                "dexador"
                "jonathan"
-	       "log4cl"
 	       "str"
-	       "trivial-types")
+	       "trivial-types"
+               "vom"
+               "vom/json")
   :components ((:file "conditions")
 	       (:file "environment")
 	       (:file "runtime-interface")

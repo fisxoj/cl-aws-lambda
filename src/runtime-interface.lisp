@@ -3,6 +3,7 @@
   (:import-from :cl-aws-lambda/conditions
 		#:runtime-error
 		#:message-of)
+  (:local-nicknames (:log :vom))
   (:export #:*api-version*
            #:*context*
 
