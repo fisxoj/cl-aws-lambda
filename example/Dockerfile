@@ -15,8 +15,13 @@ RUN bzip2 -cd sbcl-1.4.14-x86-64-linux-binary.tar.bz2 | tar xvf - \
     && sh install.sh
 
 # install quicklisp
-RUN /usr/local/bin/sbcl --non-interactive --load "quicklisp.lisp" --eval "(quicklisp-quickstart:install)" --eval "(ql-util:without-prompting (ql:add-to-init-file))"
+RUN /usr/local/bin/sbcl --non-interactive \
+        --load "quicklisp.lisp" \
+        --eval "(quicklisp-quickstart:install)" \
+        --eval "(ql-util:without-prompting (ql:add-to-init-file))"
 
 COPY build.lisp .
+
+RUN chmod +x build.lisp
 
 CMD ./build.lisp

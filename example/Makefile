@@ -20,13 +20,13 @@ help: ## Display this help section
 
 bootstrap: $(wildcard *.asd) $(wildcard *.lisp) ## Build a lisp image as a provided runtime
 	$(RUNC) build . -t cl-aws-builder
-	$(RUNC) volume create cl-aws-asdf-cache
-	$(RUNC) volume create cl-aws-quicklisp
+	$(RUNC) volume create cl-aws-asdf-cache || true
+	$(RUNC) volume create cl-aws-quicklisp || true
 	$(RUNC) run --rm -it \
 		-e ASDF_OUTPUT_TRANSLATIONS="/:/asdf-cache/" \
-		-v ${PWD}:/work/ \
+		-v ${PWD}:/work/:Z \
 		-v cl-aws-quicklisp:/root/quicklisp \
-		-v ${HOME}/quicklisp/local-projects:/root/quicklisp/local-projects \
+		-v ${HOME}/quicklisp/local-projects:/root/quicklisp/local-projects:Z \
 		-v cl-aws-asdf-cache:/asdf-cache/ \
 		cl-aws-builder
 
@@ -55,7 +55,7 @@ invoke: ## Invoke the function with a given payload
 		response.txt
 
 invoke-local: bootstrap ## Invoke the function locally using a continer
-	$(RUNC) run --rm -v "${PWD}":/var/task lambci/lambda:provided ${HANDLER} ${PAYLOAD}
+	$(RUNC) run --rm -v "${PWD}":/var/task:Z lambci/lambda:provided ${HANDLER} ${PAYLOAD}
 
 clean-artifacts: ## Remove compiled artifacts
 	rm -f function.zip bootstrap
