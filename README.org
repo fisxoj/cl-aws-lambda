@@ -40,8 +40,8 @@ Don't use this!  It's still very unstable and APIs are likely to change as the c
 
    You should be able to build your bootstrap / function.zip using the prebuilt docker image (the Dockerfile in this repo).  By pointing your code at the =/work= directory and passing in your system name as ~LAMBDA_SYSTEM_NAME~, it will automagically build your lambdas for you.
    #+begin_src sh
-     docker run --rm -it -v $PWD:/work:Z -e LAMBDA_SYSTEM_NAME="my-cool-function" quay.io/fisxoj/cl-aws-builder:latest
-     podman run --rm -it -v $PWD:/work:Z -e LAMBDA_SYSTEM_NAME="my-cool-function" quay.io/fisxoj/cl-aws-builder:latest
+     docker run --rm -it -v $PWD:/work:Z -e LAMBDA_SYSTEM_NAME="my-cool-function" quay.io/fisxoj/cl-lambda-builder:latest
+     podman run --rm -it -v $PWD:/work:Z -e LAMBDA_SYSTEM_NAME="my-cool-function" quay.io/fisxoj/cl-lambda-builder:latest
    #+end_src
 
    If you want to cache build artifacts between builds, you can check out the example in =example/Makefile=, which creates docker volumes for the build artifacts and quicklisp so they don't need to be fetched every build.
