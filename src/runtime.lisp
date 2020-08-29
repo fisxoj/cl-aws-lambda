@@ -4,6 +4,7 @@
         :cl-aws-lambda/runtime-interface
         :cl-aws-lambda/conditions
         :cl-aws-lambda/environment)
+  (:local-nicknames (:log :vom))
   (:export #:main))
 
 (in-package :cl-aws-lambda/runtime)
@@ -42,13 +43,15 @@
   "Main entry point that bootstraps the runtime and then invokes the handler function."
 
   (declare (optimize space (speed 3)))
+  (vom:config t :info)
 
-  (handling-intialization-errors ()
-    (with-environment ()
-      (let ((handler-function (symbol-function (read-from-string *handler*))))
+  (vom-json:with-json-logging
+    (handling-intialization-errors ()
+      (with-environment ()
+        (let ((handler-function (symbol-function (read-from-string *handler*))))
 
-        (log:info "Using handler function ~a." *handler*)
+          (log:info "Using handler function ~a." *handler*)
 
-        (do-events (event)
-          (handling-invocation-errors ()
-            (invocation-response (funcall handler-function event))))))))
+          (do-events (event)
+            (handling-invocation-errors ()
+              (invocation-response (funcall handler-function event)))))))))
