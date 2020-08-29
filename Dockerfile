@@ -3,6 +3,7 @@ FROM amazonlinux:2017.03.1.20170812
 RUN yum install -y zip bzip2 zlib
 
 RUN mkdir /work
+RUN mkdir /scripts
 WORKDIR /work
 
 # get SBCL and ql bootstrap
@@ -20,8 +21,12 @@ RUN /usr/local/bin/sbcl --non-interactive \
         --eval "(quicklisp-quickstart:install)" \
         --eval "(ql-util:without-prompting (ql:add-to-init-file))"
 
-COPY build.lisp .
+COPY build.lisp /scripts/build.lisp
 
-RUN chmod +x build.lisp
+RUN mkdir -p /root/quicklisp/local-projects/cl-aws-lambda/
 
-CMD ./build.lisp
+COPY ./ /root/quicklisp/local-projects/cl-aws-lambda/
+
+RUN chmod +x /scripts/build.lisp
+
+CMD /scripts/build.lisp && zip function.zip bootstrap

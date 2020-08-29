@@ -43,14 +43,15 @@
   "Main entry point that bootstraps the runtime and then invokes the handler function."
 
   (declare (optimize space (speed 3)))
+  (vom:config t :info)
 
-  (vom/json:with-json-logging
+  (vom-json:with-json-logging
     (handling-intialization-errors ()
-                                   (with-environment ()
-                                     (let ((handler-function (symbol-function (read-from-string *handler*))))
+      (with-environment ()
+        (let ((handler-function (symbol-function (read-from-string *handler*))))
 
-                                       (log:info "Using handler function ~a." *handler*)
+          (log:info "Using handler function ~a." *handler*)
 
-                                       (do-events (event)
-                                         (handling-invocation-errors ()
-                                                                     (invocation-response (funcall handler-function event)))))))))
+          (do-events (event)
+            (handling-invocation-errors ()
+              (invocation-response (funcall handler-function event)))))))))

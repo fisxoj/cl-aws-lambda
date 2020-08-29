@@ -7,7 +7,7 @@
 	       "str"
 	       "trivial-types"
                "vom"
-               "vom/json")
+               "vom-json")
   :components ((:file "conditions")
 	       (:file "environment")
 	       (:file "runtime-interface")
