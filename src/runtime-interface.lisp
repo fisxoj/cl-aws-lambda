@@ -35,6 +35,9 @@
   "Instance of :class:`request-context` that is bound during the life of a request.  Contains some meta-information about the request.")
 
 
+(defvar +lisp-lambda-runtime-agent+ (load-time-value (format nil "cl-aws-lambda (~a ~a)" (uiop/common-lisp:lisp-implementation-type) (lisp-implementation-version))))
+
+
 (defclass request-context ()
   ((request-id :type string
                :initarg :request-id
