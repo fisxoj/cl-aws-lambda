@@ -117,33 +117,28 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 	    path-components)))
 
 
+;;; BIG HONKING WARNING FOR ALL RUNTIME API CALLS:
+;;; Turn off all timeouts, it fixes problems with timing out when the application is frozen/thawed by the lambda runtime.
+;;; source: https://github.com/bmoffatt/aws-lambda-rust-runtime/blob/abe774a359b33f82319b404209a3d5ae30710d55/lambda-runtime-client/src/client.rs#L134-L139
+
+
 (declaim (inline next-invocation))
 (defun next-invocation ()
   "`Next Invocation <https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html#runtimes-api-next>`_."
 
   (declare (optimize (speed 3) (space 3) (safety 1) (compilation-speed 0)))
 
-  (flet ((logged-retry ()
-           (let ((retries 0))
-             (declare (type (integer 0 5) retries))
-             (lambda (e)
-               (declare (type condition e))
-               (when-let ((restart (find-restart 'dex:retry-request e)))
-                 (when (< retries 5)
-                   (incf retries)
-                   (log:error "Retrying request for the ~:r time because of error ~a" retries e)
-                   (invoke-restart restart)))))))
+  (multiple-value-bind (body status headers) (dex:get (make-runtime-url "runtime/invocation/next")
+                                                      :headers `((:user-agent . +lisp-lambda-runtime-agent+))
+                                                      :keep-alive t
+                                                      :connect-timeout nil
+                                                      :read-timeout nil)
+    (declare (type fixnum status))
+    (assert (= status 200) nil "The runtime interface returned a value of ~d, the body of the response was: ~S" status body)
 
-    ;; This retry is an attempt to handle the errors making syscall poll(2) that
-    ;; seem to happen when the process is unfrozen by the lambda runtime.
-    (handler-bind ((simple-error (logged-retry)))
-      (multiple-value-bind (body status headers) (dex:get (make-runtime-url "runtime/invocation/next")
-                                                          ;; saves 20+ms
-                                                          :keep-alive nil)
-        (declare (type fixnum status))
-        (assert (= status 200) nil "The runtime interface returned a value of ~d, the body of the response was: ~S" status body)
+    (log:debug "next-invocation result: ~S ~S ~S" body status headers)
 
-        (values (jojo:parse body :as :alist) (make-context headers))))))
+    (values (jojo:parse body :as :alist) (make-context headers))))
 
 
 (defmacro do-events ((event) &body body)
@@ -167,33 +162,60 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 
   (assert *context* nil "Tried to report an invocation error but *context* was unbound.")
 
-  (dex:post (make-runtime-url "runtime/invocation/" (request-id-of *context*) "/response")
-            :headers '((:content-type . "application/json"))
-            :content (jojo:to-json content :from :alist)
-            ;; saves 20+ms
-            :keep-alive nil
-            ;; Seems to save around 10ms
-            :force-binary t))
+  (log:debug "Responding to event with ~S." content)
+
+  (multiple-value-bind (body status headers)
+      (dex:post (make-runtime-url "runtime/invocation/" (request-id-of *context*) "/response")
+                :headers `((:content-type . "application/json")
+                           (:user-agent . ,+lisp-lambda-runtime-agent+))
+                :content (jojo:to-json content :from :alist)
+                ;; Seems to save around 10ms
+                :force-binary t
+                :connect-timeout nil
+                :read-timeout nil)
+
+    (log:debug "invocation-response result: ~S ~S ~S" body status headers)))
 
 
 (defun invocation-error (error)
-  (declare (type runtime-error error))
+  ;; (declare (type runtime-error error))
 
   (assert *context* nil "Tried to report an invocation error but *context* was unbound.")
 
-  (dex:post (make-runtime-url "runtime/invocation/" (request-id-of *context*) "/error")
-            :headers '((:lambda-runtime-function-error-type . "Unhandled"))
-	    :content (jojo:with-output-to-string*
-		       (jojo:with-object
-			 (jojo:write-key-value "errorMessage" (or (message-of error) ""))
-			 (jojo:write-key-value "errorType" (class-name (class-of error)))))))
+  (log:error "Invocation Error [~a]: ~a" (class-name (class-of error)) error)
+
+  (multiple-value-bind (body status headers)
+      (dex:post (make-runtime-url "runtime/invocation/" (request-id-of *context*) "/error")
+                :headers `((:user-agent . ,+lisp-lambda-runtime-agent+)
+                           (:lambda-runtime-function-error-type . "Unhandled"))
+                :content (jojo:with-output-to-string*
+                           (jojo:with-object
+                             (jojo:write-key-value "errorMessage" (or (message-of error) ""))
+                             (jojo:write-key-value "errorType" (class-name (class-of error)))))
+                :keep-alive t
+                :connect-timeout nil
+                :read-timeout nil)
+
+    (log:debug "invocation-error result: ~S ~S ~S" body status headers)))
+
 
 (defun initialization-error (error)
-  (declare (type runtime-error error))
+  ;; (declare (type runtime-error error))
 
-  (dex:post (make-runtime-url "runtime/init/error")
-            :headers '((:lambda-runtime-function-error-type . "Unhandled"))
-	    :content (jojo:with-output-to-string*
-		       (jojo:with-object
-                         (jojo:write-key-value "errorMessage" (or (message-of error) ""))
-			 (jojo:write-key-value "errorType" (class-name (class-of error)))))))
+  (log:error "Initialization Error [~a]: ~a" (class-name (class-of error)) error)
+
+  (multiple-value-bind (body status headers)
+      (dex:post (make-runtime-url "runtime/init/error")
+                :headers `((:user-agent . ,+lisp-lambda-runtime-agent+)
+                           (:lambda-runtime-function-error-type . "Unhandled"))
+                :content (jojo:with-output-to-string*
+                           (jojo:with-object
+                             (jojo:write-key-value "errorMessage" (or (message-of error) ""))
+                             (jojo:write-key-value "errorType" (class-name (class-of error)))))
+                :keep-alive t
+                :connect-timeout nil
+                :read-timeout nil)
+
+    (log:debug "initialization-error result: ~S ~S ~S" body status headers))
+
+  (uiop:quit 1))
