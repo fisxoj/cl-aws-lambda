@@ -1,7 +1,7 @@
 #!/usr/local/bin/sbcl --script
 (load "~/quicklisp/setup")
 
-(push "/work" asdf:*central-registry*)
+(push "/work/" asdf:*central-registry*)
 
 ;; #+sb-core-compression
 ;; (defmethod asdf:perform ((o asdf/bundle:program-op) (c asdf:system))
