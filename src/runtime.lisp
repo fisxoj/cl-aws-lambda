@@ -10,7 +10,7 @@
 (in-package :cl-aws-lambda/runtime)
 
 
-(defmacro handling-intialization-errors (() &body body)
+(defmacro handling-initialization-errors (() &body body)
   `(restart-case
        (handler-bind ((environment-error (lambda (e)
                                            (initialization-error e)
@@ -43,10 +43,10 @@
   "Main entry point that bootstraps the runtime and then invokes the handler function."
 
   (declare (optimize space (speed 3)))
-  (vom:config t :info)
+  (log:config t :debug)
 
   (vom-json:with-json-logging
-    (handling-intialization-errors ()
+    (handling-initialization-errors ()
       (with-environment ()
         (let ((handler-function (symbol-function (read-from-string *handler*))))
 
