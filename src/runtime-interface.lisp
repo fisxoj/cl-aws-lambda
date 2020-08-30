@@ -118,7 +118,7 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 (defun next-invocation ()
   "`Next Invocation <https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html#runtimes-api-next>`_."
 
-  (declare (optimize (speed 3) (space 3) (safety 0) (compilation-speed 0)))
+  (declare (optimize (speed 3) (space 3) (safety 1) (compilation-speed 0)))
 
   (flet ((logged-retry ()
            (let ((retries 0))
@@ -160,7 +160,7 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 (defun invocation-response (content)
   "`Invocation Response <https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html#runtimes-api-response>`_."
 
-  (declare (optimize (speed 3) (space 3) (safety 0) (compilation-speed 0)))
+  (declare (optimize (speed 3) (space 3) (safety 1) (compilation-speed 0)))
 
   (assert *context* nil "Tried to report an invocation error but *context* was unbound.")
 
