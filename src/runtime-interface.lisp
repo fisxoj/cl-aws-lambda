@@ -179,16 +179,18 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
   (assert *context* nil "Tried to report an invocation error but *context* was unbound.")
 
   (dex:post (make-runtime-url "runtime/invocation/" (request-id-of *context*) "/error")
+            :headers '((:lambda-runtime-function-error-type . "Unhandled"))
 	    :content (jojo:with-output-to-string*
 		       (jojo:with-object
-			   (jojo:write-key-value "errorMessage" (or (message-of error) ""))
+			 (jojo:write-key-value "errorMessage" (or (message-of error) ""))
 			 (jojo:write-key-value "errorType" (class-name (class-of error)))))))
 
 (defun initialization-error (error)
   (declare (type runtime-error error))
 
   (dex:post (make-runtime-url "runtime/init/error")
+            :headers '((:lambda-runtime-function-error-type . "Unhandled"))
 	    :content (jojo:with-output-to-string*
 		       (jojo:with-object
-			   (jojo:write-key-value "errorMessage" (or (message-of error) ""))
+                         (jojo:write-key-value "errorMessage" (or (message-of error) ""))
 			 (jojo:write-key-value "errorType" (class-name (class-of error)))))))
