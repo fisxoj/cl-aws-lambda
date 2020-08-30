@@ -4,7 +4,6 @@
   :depends-on ("alexandria"
                "dexador"
                "jonathan"
-	       "str"
 	       "trivial-types"
                "vom"
                "vom-json")

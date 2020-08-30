@@ -1,6 +1,6 @@
 #+TITLE: A CL Runtime for AWS Lambda
 
-Don't use this!  It's still very unstable and APIs are likely to change as the chaos of creation subsides.  I'd welcome collaborators, though.
+This is pretty alpha level software, but it seems to work fairly reliably and I'd welcome users to try it out.  You may also be interested in using it in convert with the [[https://www.serverless.com/][serverless framework]], by means of my [[https://github.com/fisxoj/serverless-lisp][serverless-lisp]] plugin, which you can pull from npm.
 
 * How to use this
 
@@ -37,6 +37,7 @@ Don't use this!  It's still very unstable and APIs are likely to change as the c
    You should now be able to compile your binary by calling ~(asdf:make :example-lambda)~.  The bootstrap binary produced is suitable for uploading to a lambda as a 'runtime provided' zip file.  You can see an example of this in the ~example/~ directory.
 
 ** With the docker image
+   [[https://quay.io/repository/fisxoj/cl-lambda-builder]]
 
    You should be able to build your bootstrap / function.zip using the prebuilt docker image (the Dockerfile in this repo).  By pointing your code at the =/work= directory and passing in your system name as ~LAMBDA_SYSTEM_NAME~, it will automagically build your lambdas for you.
    #+begin_src sh
@@ -45,6 +46,8 @@ Don't use this!  It's still very unstable and APIs are likely to change as the c
    #+end_src
 
    If you want to cache build artifacts between builds, you can check out the example in =example/Makefile=, which creates docker volumes for the build artifacts and quicklisp so they don't need to be fetched every build.
+
+   As always, it's recommended you pin the image to a version so you get consistent behavior in your builds.  I don't have a strong enough idea of what stable means for this project to have versions beyond short hashes, but those are available as tags.
 
 ** Without the ASDF helper
    You can achieve the equivalent of the asdf helper class by providing these values to your system definition:
@@ -58,7 +61,7 @@ Don't use this!  It's still very unstable and APIs are likely to change as the c
 ** Writing handler functions
    Any function can handle lambda requests!  Just define the handler as the lowercase name of the function so the runtime can find it (eg. ~example-lambda:hello~ in the example above).
 
-   Handler functions are currently functions of one argument that receive the json passed to the lambda decoded as an alist (to avoid keyword explosion of parsing it as a plist).
+   Handler functions are currently functions of one argument that receive the json passed to the lambda decoded as an alist (to avoid keyword explosion of parsing it as a plist).  The context is available as ~cl-aws-lambda/runtime-interface:*context*~ and you can investigate that package to find the class definition for that object.
 
 * Common Errors
 
@@ -71,7 +74,4 @@ Don't use this!  It's still very unstable and APIs are likely to change as the c
 
    It seems like the minimum version of sbcl required is 1.4.14.  Prior to that, it couldn't handle older versions of libc, like the one in the aws lambda runtime.
 
-   The ~example/~ directory provides a dockerfile that downloads a sufficiently recent sbcl to build its lambda that you can use as an example, though take care, it is only a proof of concept level of quality at this point.
-
-** ~Syscall poll(2) failed~
-   Networking libraries seem to choke sometimes (dexador, drakma) while trying to read from a unix socket.  It seems to only happen intermittently, and the cause isn't entirely clear, yet. See [[https://github.com/fisxoj/cl-aws-lambda/issues/1][issue #1]].
+   There is a dockerfile in the root directory that downloads a sufficiently recent sbcl to build its lambda that you can use as an example.
