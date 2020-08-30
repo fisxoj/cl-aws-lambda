@@ -15,6 +15,11 @@
 	    :reader message-of
 	    :initarg :message
 	    :documentation "A user-readable message to be returned as the result of a lambda invocation."))
+  (:report (lambda (c s)
+             (format s "Condition ~S was signalled~@[ ~a~]"
+                     (class-name (class-of c))
+                     (when (slot-boundp c 'message)
+                       (slot-value c 'message)))))
   (:documentation "The base class for all errors that can be the result of a lambda invocation."))
 
 
