@@ -96,7 +96,9 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 (defun sampled-p (context)
   (declare (type request-context context))
 
-  (str:containsp "Sampled=1" (trace-id-of context)))
+  (if (search "Sampled=1" (trace-id-of context))
+      t
+      nil))
 
 
 (declaim (inline make-runtime-url))
@@ -106,10 +108,10 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 
     (assert *aws-lambda-runtime-api* nil "Tried to assemble a runtime url, but *aws-lambda-runtime-api* was nil.")
 
-    (format nil "http://~a/~a/~a"
+    (format nil "http://~a/~a/~{~a~}"
 	    *aws-lambda-runtime-api*
 	    *api-version*
-	    (apply #'str:concat path-components))))
+	    path-components)))
 
 
 (declaim (inline next-invocation))
