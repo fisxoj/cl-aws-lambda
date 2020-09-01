@@ -43,7 +43,7 @@
   "Main entry point that bootstraps the runtime and then invokes the handler function."
 
   (declare (optimize space (speed 3)))
-  (log:config t :debug)
+  (log:config t :info)
 
   (vom-json:with-json-logging
     (handling-initialization-errors ()

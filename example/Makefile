@@ -19,7 +19,7 @@ help: ## Display this help section
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[36m%-38s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 bootstrap: $(wildcard *.asd) $(wildcard *.lisp) ## Build a lisp image as a provided runtime
-	$(RUNC) build . -t cl-aws-builder
+	$(RUNC) build ../ -t cl-lambda-builder
 	$(RUNC) volume create cl-aws-asdf-cache || true
 	$(RUNC) volume create cl-aws-quicklisp || true
 	$(RUNC) run --rm -it \
@@ -28,7 +28,7 @@ bootstrap: $(wildcard *.asd) $(wildcard *.lisp) ## Build a lisp image as a provi
 		-v cl-aws-quicklisp:/root/quicklisp \
 		-v ${HOME}/quicklisp/local-projects:/root/quicklisp/local-projects:Z \
 		-v cl-aws-asdf-cache:/asdf-cache/ \
-		cl-aws-builder
+		cl-lambda-builder
 
 function.zip: bootstrap
 	rm function.zip || exit 0
@@ -39,19 +39,21 @@ deploy: bootstrap function.zip ## Create a function.zip payload and create a new
 		--function-name ${FUNCTION_NAME} \
 		--zip-file fileb://function.zip \
 		--handler ${HANDLER} \
-		--runtime provided \
+		--runtime provided.al2 \
 		--role ${ROLE_ARN} \
 		--region ${REGION}
 
 update: bootstrap function.zip ## Create a function.zip and update the existing lambda function in AWS
 	aws lambda update-function-code \
 		--function-name ${FUNCTION_NAME} \
-		--zip-file fileb://function.zip
+		--zip-file fileb://function.zip \
+		--region ${REGION}
 
 invoke: ## Invoke the function with a given payload
 	aws lambda invoke \
 		--function-name ${FUNCTION_NAME} \
 		--payload ${PAYLOAD} \
+		--region ${REGION} \
 		response.txt
 
 invoke-local: bootstrap ## Invoke the function locally using a continer
