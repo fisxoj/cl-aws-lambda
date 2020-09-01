@@ -1,25 +1,27 @@
-FROM amazonlinux:2017.03.1.20170812
+FROM amazonlinux:2
 
-RUN yum install -y zip bzip2 zlib
+RUN yum install -y zip bzip2 zlib tar make && yum clean all
 
 RUN mkdir /work
 RUN mkdir /scripts
 WORKDIR /work
 
-# get SBCL and ql bootstrap
-RUN curl -s -f -O -L http://prdownloads.sourceforge.net/sbcl/sbcl-1.4.14-x86-64-linux-binary.tar.bz2
-RUN curl -s -f -O "https://beta.quicklisp.org/quicklisp.lisp"
+ARG SBCL_VERSION=1.5.5
 
-# install binary to /usr/local/bin/sbcl
-RUN bzip2 -cd sbcl-1.4.14-x86-64-linux-binary.tar.bz2 | tar xvf - \
-    && cd sbcl-1.4.14-x86-64-linux \
-    && sh install.sh
+# install sbcl to /usr/local/bin/sbcl
+RUN curl -s -f -O -L http://prdownloads.sourceforge.net/sbcl/sbcl-$SBCL_VERSION-x86-64-linux-binary.tar.bz2 \
+    && bzip2 -cd sbcl-$SBCL_VERSION-x86-64-linux-binary.tar.bz2 | tar xvf - \
+    && cd sbcl-$SBCL_VERSION-x86-64-linux \
+    && sh install.sh \
+    && rm -rf sbcl-$SBCL_VERSION-x86-64-linux sbcl-$SBCL_VERSION-x86-64-linux-binary.tar.bz2
 
 # install quicklisp
-RUN /usr/local/bin/sbcl --non-interactive \
+RUN curl -s -f -O "https://beta.quicklisp.org/quicklisp.lisp" \
+    && /usr/local/bin/sbcl --non-interactive \
         --load "quicklisp.lisp" \
         --eval "(quicklisp-quickstart:install)" \
-        --eval "(ql-util:without-prompting (ql:add-to-init-file))"
+        --eval "(ql-util:without-prompting (ql:add-to-init-file))" \
+    && rm quicklisp.lisp
 
 COPY build.lisp /scripts/build.lisp
 
