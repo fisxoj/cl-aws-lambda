@@ -82,7 +82,7 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 (defun make-context (headers)
   "Makes a context instance out of a hash table of headers."
 
-  (declare (optimize (speed 3) (space 3) (safety 0) (compilation-speed 0)))
+  (declare (optimize (speed 3) (space 3) (safety 1) (compilation-speed 0)))
 
   (macrolet ((header (name) `(gethash ,(string-downcase name) headers)))
 
