@@ -4,7 +4,7 @@
         :cl-aws-lambda/runtime-interface
         :cl-aws-lambda/conditions
         :cl-aws-lambda/environment)
-  (:local-nicknames (:log :vom))
+  (:local-nicknames (:log :beaver))
   (:export #:main))
 
 (in-package :cl-aws-lambda/runtime)
@@ -43,15 +43,15 @@
   "Main entry point that bootstraps the runtime and then invokes the handler function."
 
   (declare (optimize space (speed 3)))
-  (log:config t :info)
+  (setf beaver:*loggers*
+        (list (make-instance 'beaver/st-json:st-json-logger)))
+  (handling-initialization-errors ()
+    (with-environment ()
+      (let ((handler-function (symbol-function (read-from-string *handler*))))
 
-  (vom-json:with-json-logging
-    (handling-initialization-errors ()
-      (with-environment ()
-        (let ((handler-function (symbol-function (read-from-string *handler*))))
+        (log:info "Using handler function ~a." *handler*)
 
-          (log:info "Using handler function ~a." *handler*)
-
-          (do-events (event)
+        (do-events (event)
+          (log:with-fields (:request-id (request-id-of *context*) string)
             (handling-invocation-errors ()
               (invocation-response (funcall handler-function event)))))))))

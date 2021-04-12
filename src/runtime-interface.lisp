@@ -3,7 +3,7 @@
   (:import-from :cl-aws-lambda/conditions
 		#:runtime-error
 		#:message-of)
-  (:local-nicknames (:log :vom))
+  (:local-nicknames (:log :beaver))
   (:export #:*api-version*
            #:*context*
 
@@ -182,7 +182,8 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 
   (assert *context* nil "Tried to report an invocation error but *context* was unbound.")
 
-  (log:error "Invocation Error [~a]: ~a" (class-name (class-of error)) error)
+  (log:with-backtrace error
+    (log:error "Invocation Error"))
 
   (multiple-value-bind (body status headers)
       (dex:post (make-runtime-url "runtime/invocation/" (request-id-of *context*) "/error")
@@ -200,9 +201,8 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 
 
 (defun initialization-error (error)
-  ;; (declare (type runtime-error error))
-
-  (log:error "Initialization Error [~a]: ~a" (class-name (class-of error)) error)
+  (log:with-backtrace error
+    (log:error "Initialization Error"))
 
   (multiple-value-bind (body status headers)
       (dex:post (make-runtime-url "runtime/init/error")

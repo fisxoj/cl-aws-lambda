@@ -1,5 +1,6 @@
 (defpackage cl-aws-lambda/conditions
   (:use :cl :alexandria)
+  (:local-nicknames (:log :beaver))
   (:export #:runtime-error
 	   #:message-of
 	   #:environment-error
