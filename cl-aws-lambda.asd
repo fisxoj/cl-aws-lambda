@@ -4,13 +4,12 @@
   :depends-on ("alexandria"
                "dexador"
                "jonathan"
-	       "trivial-types"
-               "vom"
-               "vom-json")
+               "trivial-types"
+               "beaver/st-json")
   :components ((:file "conditions")
-	       (:file "environment")
-	       (:file "runtime-interface")
-	       (:file "runtime"))
+               (:file "environment")
+               (:file "runtime-interface")
+               (:file "runtime"))
   :in-order-to ((test-op (test-op cl-aws-lambda/test))))
 
 
