@@ -57,7 +57,7 @@ invoke: ## Invoke the function with a given payload
 		response.txt
 
 invoke-local: bootstrap ## Invoke the function locally using a continer
-	$(RUNC) run --rm -v "${PWD}":/var/task:Z lambci/lambda:provided ${HANDLER} ${PAYLOAD}
+	$(RUNC) run --rm -v "${PWD}":/var/task:ro,delegated,Z lambci/lambda:provided.al2 ${HANDLER} ${PAYLOAD}
 
 clean-artifacts: ## Remove compiled artifacts
 	rm -f function.zip bootstrap
