@@ -1,12 +1,12 @@
 (defpackage cl-aws-lambda/environment
   (:use :cl :alexandria)
   (:import-from #:cl-aws-lambda/conditions
-		#:environment-error)
+                #:environment-error)
   (:export #:with-environment
-	   #:*handler*
+           #:*handler*
            #:*lambda-runtime-dir*
-	   #:*lambda-task-root*
-	   #:*aws-lambda-runtime-api*))
+           #:*lambda-task-root*
+           #:*aws-lambda-runtime-api*))
 
 (in-package :cl-aws-lambda/environment)
 
@@ -25,16 +25,16 @@
   "Checks to see that everything outside the lisp runtime is set up as we expect."
 
   (flet ((check-env (name)
-	   (unless (uiop:getenvp name)
-	     (error 'environment-error
-		    :message (format nil "Environment variable ~S was not set during initialization." name)))))
+           (unless (uiop:getenvp name)
+             (error 'environment-error
+                    :message (format nil "Environment variable ~S was not set during initialization." name)))))
     (check-env "_HANDLER")
     (check-env "LAMBDA_TASK_ROOT")))
 
 
 (defmacro with-environment (() &body body)
   `(let ((*handler* (uiop:getenv "_HANDLER"))
-	 (*lambda-task-root* (uiop:getenv "LAMBDA_TASK_ROOT"))
+         (*lambda-task-root* (uiop:getenv "LAMBDA_TASK_ROOT"))
          (*lambda-runtime-dir* (uiop:getenv "LAMBDA_RUNTIME_DIR")))
 
      (check-environment)

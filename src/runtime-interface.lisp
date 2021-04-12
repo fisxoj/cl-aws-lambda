@@ -1,8 +1,8 @@
 (defpackage cl-aws-lambda/runtime-interface
   (:use :cl :alexandria)
   (:import-from :cl-aws-lambda/conditions
-		#:runtime-error
-		#:message-of)
+                #:runtime-error
+                #:message-of)
   (:local-nicknames (:log :beaver))
   (:export #:*api-version*
            #:*context*
@@ -12,14 +12,14 @@
            #:deadline-milliseconds-of
            #:invoked-function-arn-of
            #:trace-id-of
-	   #:client-context-of
-	   #:cognito-identity-of
+           #:client-context-of
+           #:cognito-identity-of
 
            #:next-invocation
            #:invocation-response
-	   #:invocation-error
-	   #:initialization-error
-	   #:do-events))
+           #:invocation-error
+           #:initialization-error
+           #:do-events))
 
 (in-package :cl-aws-lambda/runtime-interface)
 
@@ -112,9 +112,9 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
     (assert *aws-lambda-runtime-api* nil "Tried to assemble a runtime url, but *aws-lambda-runtime-api* was nil.")
 
     (format nil "http://~a/~a/~{~a~}"
-	    *aws-lambda-runtime-api*
-	    *api-version*
-	    path-components)))
+            *aws-lambda-runtime-api*
+            *api-version*
+            path-components)))
 
 
 ;;; BIG HONKING WARNING FOR ALL RUNTIME API CALLS:
@@ -151,7 +151,7 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
             (when (sampled-p *context*)
               (setf (uiop:getenv "_X_AMZN_TRACE_ID") (trace-id-of *context*)))
 
-	    ,@body))))
+            ,@body))))
 
 
 (declaim (inline invocation-response))
@@ -178,8 +178,6 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
 
 
 (defun invocation-error (error)
-  ;; (declare (type runtime-error error))
-
   (assert *context* nil "Tried to report an invocation error but *context* was unbound.")
 
   (log:with-backtrace error
