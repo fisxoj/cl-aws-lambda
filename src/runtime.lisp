@@ -12,11 +12,8 @@
 
 (defmacro handling-initialization-errors (() &body body)
   `(restart-case
-       (handler-bind ((environment-error (lambda (e)
-                                           (initialization-error e)
-                                           (invoke-restart 'die)))
-                      (error (lambda (e)
-                               (initialization-error (handle-uncaught-initialization-error e))
+       (handler-bind ((error (lambda (e)
+                               (initialization-error e)
                                (invoke-restart 'die))))
 
          ,@body)
@@ -30,7 +27,7 @@
                                        (invocation-error e)
                                        (invoke-restart 'continue)))
                       (error (lambda (e)
-                               (invocation-error (handle-uncaught-invocation-error e))
+                               (invocation-error e)
                                (invoke-restart 'continue))))
 
          ,@body)

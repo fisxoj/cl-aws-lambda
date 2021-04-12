@@ -191,7 +191,7 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
                            (:lambda-runtime-function-error-type . "Unhandled"))
                 :content (jojo:with-output-to-string*
                            (jojo:with-object
-                             (jojo:write-key-value "errorMessage" (or (message-of error) ""))
+                             (jojo:write-key-value "errorMessage" (princ-to-string error))
                              (jojo:write-key-value "errorType" (class-name (class-of error)))))
                 :keep-alive t
                 :connect-timeout nil
@@ -210,7 +210,7 @@ For example, Root=1-5bef4de7-ad49b0e87f6ef6c87fc2e700;Parent=9a9197af755a6419;Sa
                            (:lambda-runtime-function-error-type . "Unhandled"))
                 :content (jojo:with-output-to-string*
                            (jojo:with-object
-                             (jojo:write-key-value "errorMessage" (or (message-of error) ""))
+                             (jojo:write-key-value "errorMessage" (princ-to-string error))
                              (jojo:write-key-value "errorType" (class-name (class-of error)))))
                 :keep-alive t
                 :connect-timeout nil
