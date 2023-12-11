@@ -57,7 +57,7 @@ invoke: ## Invoke the function with a given payload
 		response.txt
 
 invoke-local: bootstrap ## Invoke the function locally using a container
-	$(RUNC) run --platform=linux/amd64 --rm -v "${PWD}":/var/task:Z public.ecr.aws/lambda/provided:al2023 ${HANDLER} ${PAYLOAD}
+	$(RUNC) run --platform=linux/amd64 -p 9000:8080 --rm -v "${PWD}":/var/runtime:Z public.ecr.aws/lambda/provided:al2023 ${HANDLER}
 
 clean-artifacts: ## Remove compiled artifacts
 	rm -f function.zip bootstrap
