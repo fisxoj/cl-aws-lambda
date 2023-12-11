@@ -25,10 +25,6 @@ RUN curl -s -f -O "https://beta.quicklisp.org/quicklisp.lisp" \
 
 COPY build.lisp /scripts/build.lisp
 
-# RUN mkdir -p /root/quicklisp/local-projects/cl-aws-lambda/
-
-# COPY ./ /root/quicklisp/local-projects/cl-aws-lambda/
-
 RUN chmod +x /scripts/build.lisp
 
 CMD /scripts/build.lisp && zip function.zip bootstrap
