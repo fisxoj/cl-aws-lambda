@@ -4,15 +4,18 @@
      - Docker
      - zip
      - awscli
+     - qlot
 
-  2. Furthermore, you'll need an AWS account with a basic lambda role defined.  AWS has a [[https://docs.aws.amazon.com/lambda/latest/dg/getting-started.html][Getting Started with AWS Lambda]] guide that might be useful for you, at this point.
+  2. [[https://github.com/fukamachi/qlot][qlot]] can be installed via roswell. It serves as a local quicklisp directory, which contains fixed versions of your development dependencies. You need to invoke qlot update once in the example directory to get started.
 
-  3. Once you have created a [[https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html][role]] for your lambda, use the ~cp .env.default .env~ and edit the file to set the role ARN for your lambda.  You can also override the other variables in the ~Makefile~, here, if you wish.
+  3. Furthermore, you'll need an AWS account with a basic lambda role defined.  AWS has a [[https://docs.aws.amazon.com/lambda/latest/dg/getting-started.html][Getting Started with AWS Lambda]] guide that might be useful for you, at this point.
 
-  4. With your ARN set, you should be able to compile and deploy the example lambda.  Run ~make deploy~, which should compile your lambda in docker (so we have a sufficiently new version of sbcl), zip it into ~function.zip~ and then create a lambda in AWS by uploading that zip as a custom runtime using the aws cli tool.
+  4. Once you have created a [[https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html][role]] for your lambda, use the ~cp .env.default .env~ and edit the file to set the role ARN for your lambda.  You can also override the other variables in the ~Makefile~, here, if you wish.
 
-  5. You should now be able to run ~make invoke~, which will call your lambda with the aws cli to ask it to say hello to me.  Thank you for saying hello to me.
+  5. With your ARN set, you should be able to compile and deploy the example lambda.  Run ~make deploy~, which should compile your lambda in docker (so we have a sufficiently new version of sbcl), zip it into ~function.zip~ and then create a lambda in AWS by uploading that zip as a custom runtime using the aws cli tool.
 
-  6. If you want to, you can change the code of ~hello.lisp~ and then run ~make update~ to recompile and update your lambda function.
+  6. You should now be able to run ~make invoke~, which will call your lambda with the aws cli to ask it to say hello to me.  Thank you for saying hello to me.
+
+  7. If you want to, you can change the code of ~hello.lisp~ and then run ~make update~ to recompile and update your lambda function.
 
   Deleting a lambda is left as an exercise to the reader, I guess.

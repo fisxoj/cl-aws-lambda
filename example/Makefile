@@ -5,7 +5,7 @@ ROLE_ARN ?= "set-your-arn-here"
 HANDLER ?= "example-lambda:hello"
 REGION ?= "us-east-1"
 
-RUNC ?= podman
+RUNC ?= docker
 
 PAYLOAD ?= '{"name": "Matt"}'
 
@@ -22,11 +22,10 @@ bootstrap: $(wildcard *.asd) $(wildcard *.lisp) ## Build a lisp image as a provi
 	$(RUNC) build ../ -t cl-lambda-builder
 	$(RUNC) volume create cl-aws-asdf-cache || true
 	$(RUNC) volume create cl-aws-quicklisp || true
-	$(RUNC) run --rm -it \
+	$(RUNC) run --platform=linux/amd64 --rm -it \
 		-e ASDF_OUTPUT_TRANSLATIONS="/:/asdf-cache/" \
 		-v ${PWD}:/work/:Z \
-		-v cl-aws-quicklisp:/root/quicklisp \
-		-v ${HOME}/quicklisp/local-projects:/root/quicklisp/local-projects:Z \
+		-v ${PWD}/.qlot:/root/quicklisp \
 		-v cl-aws-asdf-cache:/asdf-cache/ \
 		cl-lambda-builder
 
@@ -35,29 +34,30 @@ function.zip: bootstrap
 	zip function.zip bootstrap
 
 deploy: bootstrap function.zip ## Create a function.zip payload and create a new lambda function in AWS
-	aws lambda create-function \
+	aws --profile ${AWS_PROFILE} lambda create-function \
 		--function-name ${FUNCTION_NAME} \
 		--zip-file fileb://function.zip \
 		--handler ${HANDLER} \
-		--runtime provided.al2 \
+		--runtime provided.al2023 \
 		--role ${ROLE_ARN} \
 		--region ${REGION}
 
 update: bootstrap function.zip ## Create a function.zip and update the existing lambda function in AWS
-	aws lambda update-function-code \
+	aws --profile ${AWS_PROFILE} lambda update-function-code \
 		--function-name ${FUNCTION_NAME} \
 		--zip-file fileb://function.zip \
 		--region ${REGION}
 
 invoke: ## Invoke the function with a given payload
-	aws lambda invoke \
+	aws --profile ${AWS_PROFILE} lambda invoke \
 		--function-name ${FUNCTION_NAME} \
+		--cli-binary-format raw-in-base64-out \
 		--payload ${PAYLOAD} \
 		--region ${REGION} \
 		response.txt
 
-invoke-local: bootstrap ## Invoke the function locally using a continer
-	$(RUNC) run --rm -v "${PWD}":/var/task:Z lambci/lambda:provided ${HANDLER} ${PAYLOAD}
+invoke-local: bootstrap ## Invoke the function locally using a container
+	$(RUNC) run --platform=linux/amd64 -p 9000:8080 --rm -v "${PWD}":/var/runtime:Z public.ecr.aws/lambda/provided:al2023 ${HANDLER}
 
 clean-artifacts: ## Remove compiled artifacts
 	rm -f function.zip bootstrap

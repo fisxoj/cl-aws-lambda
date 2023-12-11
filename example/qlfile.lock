@@ -1,0 +1,8 @@
+("quicklisp" .
+ (:class qlot/source/dist:source-dist
+  :initargs (:distribution "https://beta.quicklisp.org/dist/quicklisp.txt" :%version :latest)
+  :version "2023-10-21"))
+("cl-aws-lambda" .
+ (:class qlot/source/github:source-github
+  :initargs (:repos "fisxoj/cl-aws-lambda" :ref nil :branch nil :tag nil)
+  :version "github-6ed1efbacd4a98410b9b1b340614e0d35c4507de"))
